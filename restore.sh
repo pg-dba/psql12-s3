@@ -32,18 +32,20 @@ sed -i 's/ARCHIVE=1/ARCHIVE=0/' /var/lib/postgresql/data/archive_wal.sh
 cat /var/lib/postgresql/data/archive_wal.sh | grep -v -P '^\s*(#|;|$)' | grep "DEBUG=\|LOG=\|ARCHIVE="
 
 echo -e "\n${YELLOW}command for restoring WAL${NC}"
-echo "restore_command = 'barman-cloud-wal-restore --endpoint-url ${MINIO_ENDPOINT_URL} s3://${MINIO_BACKET} $1 %f %p'" > /var/lib/postgresql/data/recovery.conf
+echo "restore_command = 'barman-cloud-wal-restore --endpoint-url ${MINIO_ENDPOINT_URL} s3://${MINIO_BACKET} $1 %f %p'" >> /var/lib/postgresql/data/postgresql.auto.conf
 if [[ -z "$3" ]]; then
-echo "recovery_target_timeline = 'latest'" >> /var/lib/postgresql/data/recovery.conf
+echo "recovery_target_timeline = 'latest'" >> /var/lib/postgresql/data/postgresql.auto.conf
 else
-echo "recovery_target_time = '$3'" >> /var/lib/postgresql/data/recovery.conf
-echo "recovery_target_action = 'promote'" >> /var/lib/postgresql/data/recovery.conf
-
+echo "recovery_target_time = '$3'" >> /var/lib/postgresql/data/postgresql.auto.conf
+echo "recovery_target_action = 'promote'" >> /var/lib/postgresql/data/postgresql.auto.conf
 fi
 
-chown 999:999 /var/lib/postgresql/data/recovery.conf
-cat /var/lib/postgresql/data/recovery.conf
+touch /var/lib/postgresql/data/recovery.signal
+chown 999:999 /var/lib/postgresql/data/recovery.signal
 chown 999:999 /var/lib/postgresql/data/backup_label
+
+cat /var/lib/postgresql/data/postgresql.auto.conf
+
 # chown -R 999:999 /var/lib/postgresql/data/*
 # find /var/lib/postgresql/data/* \( ! -user 999 -or ! -group 999 \) -exec echo {} \;
 # find /var/lib/postgresql/data/* \( ! -user 999 -or ! -group 999 \) -exec chown 999:999 {} \;
